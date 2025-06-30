@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>欢迎，{{ current_user.username }}！</h1>
+    <div class="dashboard-actions">
+        <a href="{{ url_for('tasks.create_task') }}" class="btn btn-success">创建新任务</a>
+    </div>
+</div>
+
+<div class="dashboard-filters">
+    <div class="card">
+        <div class="card-body">
+            <div class="filter-controls">
+                <label for="task-filter">过滤任务：</label>
+                <select id="task-filter" class="form-control">
+                    <option value="all">所有任务</option>
+                    <option value="active">进行中</option>
+                    <option value="completed">已完成</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tasks-container">
+    {% if tasks %}
+    <ul class="task-list">
+        {% for task in tasks %}
+        <li class="task-item {% if task.completed %}completed{% endif %}" 
+            {% if task.deadline and task.deadline < now and not task.completed %}class="overdue"{% endif %}>
+            <div class="task-content">
+                <h3 class="task-title">
+                    <input type="checkbox" class="task-checkbox" data-task-id="{{ task.id }}" 
+                        {% if task.completed %}checked{% endif %}>
+                    {{ task.title }}
+                </h3>
+                
+                <div class="task-meta">
+                    <span>创建于：{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    {% if task.deadline %}
+                    <span data-deadline="{{ task.deadline.isoformat() }}">
+                        截止日期：{{ task.deadline.strftime('%Y-%m-%d %H:%M') }}
+                        {% if task.deadline < now and not task.completed %}
+                        <span class="overdue-badge">已过期</span>
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                {% if task.description %}
+                <div class="task-description-container">
+                    <button class="task-description-toggle">显示详情</button>
+                    <div class="task-description" style="display: none;">
+                        {{ task.description }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="task-actions">
+                <a href="{{ url_for('tasks.edit_task', task_id=task.id) }}" class="btn btn-warning">编辑</a>
+                <a href="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="btn btn-danger delete-task-btn">删除</a>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="no-tasks">
+        <div class="card">
+            <div class="card-body text-center">
+                <p>您还没有创建任何任务。</p>
+                <a href="{{ url_for('tasks.create_task') }}" class="btn">创建第一个任务</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-filters {
+        margin-bottom: 20px;
+    }
+    
+    .filter-controls {
+        display: flex;
+        align-items: center;
+    }
+    
+    .filter-controls label {
+        margin-right: 10px;
+        font-weight: 500;
+    }
+    
+    .filter-controls .form-control {
+        width: auto;
+    }
+    
+    .task-description-toggle {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        padding: 0;
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .task-description {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        white-space: pre-line;
+    }
+    
+    .no-tasks {
+        text-align: center;
+        margin-top: 40px;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+    
+    .overdue-badge {
+        color: var(--danger-color);
+        font-weight: bold;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置当前日期
+        window.now = new Date();
+    });
+</script>
+{% endblock %} 
